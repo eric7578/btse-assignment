@@ -1,3 +1,4 @@
+import LastPrice from './LastPrice';
 import Quote from './Quote';
 import useLastPrice from './useLastPrice';
 import useOrderBook from './useOrderBook';
@@ -7,8 +8,8 @@ export default function OrderBook({ market, wsOrderBook, wsLastPrice, numQuotes 
   const lastPrice = useLastPrice(market, wsLastPrice);
 
   return (
-    <div className='w-full h-full bg-(--bg-color) text-sm text-(--text-color)'>
-      <h2 className='m-0 p-2 text-lg font-bold'>Order Book</h2>
+    <div className='w-[400px] bg-(--bg-color) text-sm text-(--text-color)'>
+      <h2 className='m-0 py-1 px-2 text-lg font-bold border-b border-[#333]'>Order Book</h2>
       <table className='w-full border-0'>
         <thead>
           <tr className='text-(--th-text-color)'>
@@ -21,11 +22,7 @@ export default function OrderBook({ market, wsOrderBook, wsLastPrice, numQuotes 
           {sells.map(sell => (
             <Quote key={sell.price} isSell {...sell} />
           ))}
-          <tr>
-            <td colSpan={3} className='text-center text-lg font-bold '>
-              {lastPrice?.price}
-            </td>
-          </tr>
+          {Boolean(lastPrice) && <LastPrice lastPrice={lastPrice} />}
           {buys.map(buy => (
             <Quote key={buy.price} {...buy} />
           ))}
