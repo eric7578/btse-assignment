@@ -25,12 +25,13 @@ export default function useQuotes(descTotal, numQuotes) {
 
   const currentPrices = useRef(new Set());
   const quotes = useMemo(() => {
+    const totalSizes = Array.from(priceSizes.values()).reduce((a, b) => a + b, 0);
     const quotes = Array.from(priceSizes.entries())
       .slice(0, numQuotes)
       .map(([price, size]) => ({
         price,
         size,
-        isNew: currentPrices.size > 0 ? !currentPrices.has(price) : false,
+        isNew: currentPrices.current.size > 0 ? !currentPrices.current.has(price) : false,
       }));
 
     // Calculate total for quotes
@@ -39,10 +40,12 @@ export default function useQuotes(descTotal, numQuotes) {
       for (let i = last; i >= 0; i--) {
         const q = quotes[i];
         q.total = i === last ? q.size : quotes[i + 1].total + q.size;
+        q.totalPercent = q.total / totalSizes;
       }
     } else {
       quotes.forEach((q, i) => {
         q.total = i > 0 ? quotes[i - 1].total + q.size : q.size;
+        q.totalPercent = q.total / totalSizes;
       });
     }
 
@@ -79,20 +82,4 @@ function quotesReducer(priceSizes, action) {
     default:
       throw new Error(`Unknown action type: ${action.type}`);
   }
-
-  // update prices
-  // state.prices = new Set(state.quotes.map(q => q.price));
-
-  // // calculate total for quotes
-  // if (action.descTotal) {
-  //   const last = state.quotes.length - 1;
-  //   for (let i = last; i >= 0; i--) {
-  //     const q = state.quotes[i];
-  //     q.total = i === last ? q.size : state.quotes[i + 1].total + q.size;
-  //   }
-  // } else {
-  //   state.quotes.forEach((q, i) => {
-  //     q.total = i > 0 ? state.quotes[i - 1].total + q.size : q.size;
-  //   });
-  // }
 }

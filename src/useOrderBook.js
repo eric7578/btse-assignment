@@ -33,8 +33,5 @@ export default function useOrderBook(market, numQuotes, wsOrderBook) {
     };
   }, [wsOrderBook, market, sellsSnapshot, sellsDelta, buysSnapshot, buysDelta]);
 
-  return {
-    sells,
-    buys,
-  };
+  return [sells, buys];
 }
