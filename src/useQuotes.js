@@ -25,14 +25,13 @@ export default function useQuotes(descTotal, numQuotes) {
 
   const currentPrices = useRef(new Set());
   const quotes = useMemo(() => {
-    const totalSizes = Array.from(priceSizes.values()).reduce((a, b) => a + b, 0);
-    const quotes = Array.from(priceSizes.entries())
-      .slice(0, numQuotes)
-      .map(([price, size]) => ({
-        price,
-        size,
-        isNew: currentPrices.current.size > 0 ? !currentPrices.current.has(price) : false,
-      }));
+    const sliced = Array.from(priceSizes.entries()).slice(0, numQuotes);
+    const totalSizes = sliced.reduce((sum, q) => sum + q[1], 0);
+    const quotes = sliced.map(([price, size]) => ({
+      price,
+      size,
+      isNew: currentPrices.current.size > 0 ? !currentPrices.current.has(price) : false,
+    }));
 
     // Calculate total for quotes
     if (descTotal) {
