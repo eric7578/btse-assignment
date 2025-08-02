@@ -6,11 +6,11 @@ import { memo } from 'react';
 function Quote({ quote, totalSize, isSell }) {
   const sizeBarWidth = (quote.currentTotalSize / totalSize) * 100;
 
-  // 若價錢改變 且size異動 才需要閃爍
+  // Blink when price changes and size changes
   const blinkGreenOnSize = useBlink(quote.sizeDelta > 0);
   const blinkRedOnSize = useBlink(quote.sizeDelta < 0);
 
-  // 若是新報價 則閃爍
+  // Blink if it's a new quote
   const blinkRow = useBlink(quote.isNewPrice);
 
   const priceText = useNumberFormat(quote.price, 1);

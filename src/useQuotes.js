@@ -37,7 +37,7 @@ export default function useQuotes(numQuotes, isSell) {
 
 export function quotesReducer(state, action) {
   switch (action.type) {
-    // 快照,直接更新price-size
+    // Snapshot: directly update price-size
     case 'snapshot': {
       return action.quotes.reduce(
         (nextState, [sPrice, sSize]) => {
@@ -61,7 +61,7 @@ export function quotesReducer(state, action) {
       );
     }
 
-    // 差異更新,更新price-size
+    // Delta update: update price-size
     case 'delta': {
       return produce(state, draft => {
         draft.totalSize = 0;
@@ -70,17 +70,17 @@ export function quotesReducer(state, action) {
           const size = Number(sSize);
 
           if (size === 0) {
-            // 若size為0,則刪除該quote
+            // If size is 0, delete the quote
             draft.quotes.delete(price);
           } else if (draft.quotes.has(price)) {
-            // 更新已存在的quote
+            // Update existing quote
             const existingQuote = draft.quotes.get(price);
             existingQuote.sizeDelta = existingQuote.size - size;
             existingQuote.size = size;
             existingQuote.isNewPrice = false;
             draft.totalSize += size;
           } else {
-            // 若為新quote,則新增
+            // If it's a new quote, add it
             draft.quotes.set(price, {
               price,
               isNewPrice: true,

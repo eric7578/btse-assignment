@@ -11,13 +11,13 @@ describe('sliceQuotes', () => {
     return map;
   }
 
-  it('當沒有報價時返回空陣列', () => {
+  it('should return empty array when no quotes', () => {
     const quotes = new Map();
     const result = sliceQuotes(quotes, 5, true);
     expect(result).toEqual([]);
   });
 
-  it('計算賣單的currentTotalSize', () => {
+  it('should calculate currentTotalSize for sell orders', () => {
     const quotes = makeQuotesMap([
       [102, 10],
       [101, 20],
@@ -30,7 +30,7 @@ describe('sliceQuotes', () => {
     expect(result[2].currentTotalSize).toBe(30);
   });
 
-  it('計算買單的currentTotalSize', () => {
+  it('should calculate currentTotalSize for buy orders', () => {
     const quotes = makeQuotesMap([
       [102, 10],
       [101, 20],
@@ -45,7 +45,7 @@ describe('sliceQuotes', () => {
 });
 
 describe('quotesReducer', () => {
-  it('處理快照：設定報價和總大小', () => {
+  it('should handle snapshot: set quotes and total size', () => {
     const action = {
       type: 'snapshot',
       quotes: [
@@ -65,7 +65,7 @@ describe('quotesReducer', () => {
     expect(nextState.totalSize).toBe(30);
   });
 
-  it('處理差異更新：更新現有報價大小和大小變化', () => {
+  it('should handle delta updates: update existing quote size and size delta', () => {
     const initialState = {
       quotes: new Map([
         [100, { price: 100, isNewPrice: false, size: 10, sizeDelta: 0 }],
