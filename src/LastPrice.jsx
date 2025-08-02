@@ -1,3 +1,4 @@
+import useNumberFormat from './useFormatCurrency';
 import usePrevious from './usePrevious';
 import cx from 'clsx';
 import { memo } from 'react';
@@ -6,6 +7,7 @@ function LastPrice({ lastPrice }) {
   const prevPrice = usePrevious(lastPrice.price);
   const isPriceIncreased = lastPrice.price > prevPrice;
   const isPriceDecreased = lastPrice.price < prevPrice;
+  const lastPriceText = useNumberFormat(lastPrice.price, 1);
 
   return (
     <tr>
@@ -17,7 +19,7 @@ function LastPrice({ lastPrice }) {
           'text-(--text-color) bg-(--last-price-same-bg)': !isPriceIncreased && !isPriceDecreased,
         })}
       >
-        {lastPrice.price.toLocaleString('en-US')}
+        {lastPriceText}
         <svg
           xmlns='http://www.w3.org/2000/svg'
           width='24'

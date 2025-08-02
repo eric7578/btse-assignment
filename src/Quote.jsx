@@ -1,4 +1,5 @@
 import useBlink from './useBlink';
+import useNumberFormat from './useFormatCurrency';
 import cx from 'clsx';
 import { memo } from 'react';
 
@@ -12,6 +13,10 @@ function Quote({ quote, totalSize, isSell }) {
   // 若是新報價 則閃爍
   const blinkRow = useBlink(quote.isNewPrice);
 
+  const priceText = useNumberFormat(quote.price, 1);
+  const sizeText = useNumberFormat(quote.size, 0);
+  const totalText = useNumberFormat(quote.currentTotalSize, 0);
+
   return (
     <tr
       className='font-bold transition-colors hover:bg-(--quote-hover-color)'
@@ -20,7 +25,7 @@ function Quote({ quote, totalSize, isSell }) {
       }}
     >
       <td className={cx('py-1 px-2', isSell ? 'text-(--sell-price-color)' : 'text-(--buy-price-color)')}>
-        {quote.price.toLocaleString('en-US')}
+        {priceText}
       </td>
       <td
         className='py-1 px-2 text-right'
@@ -28,7 +33,7 @@ function Quote({ quote, totalSize, isSell }) {
           animation: blinkGreenOnSize ? 'blink-green 500ms ease' : blinkRedOnSize ? 'blink-red 500ms ease' : 'none',
         }}
       >
-        {quote.size.toLocaleString('en-US')}
+        {sizeText}
       </td>
       <td
         className='py-1 px-2 text-right bg-right bg-no-repeat'
@@ -41,7 +46,7 @@ function Quote({ quote, totalSize, isSell }) {
           )`,
         }}
       >
-        {quote.currentTotalSize.toLocaleString('en-US')}
+        {totalText}
       </td>
     </tr>
   );
