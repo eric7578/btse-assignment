@@ -35,7 +35,7 @@ export default function useQuotes(numQuotes, isSell) {
   return [slicedQuotes, state.totalSize, snapshot, delta];
 }
 
-function quotesReducer(state, action) {
+export function quotesReducer(state, action) {
   switch (action.type) {
     // 快照,直接更新price-size
     case 'snapshot': {
@@ -98,7 +98,7 @@ function quotesReducer(state, action) {
   }
 }
 
-function sliceQuotes(allQuotes, numQuotes, isSell) {
+export function sliceQuotes(allQuotes, numQuotes, isSell) {
   const quotes = [...allQuotes.values()].slice(0, numQuotes);
   return produce(quotes, draft => {
     let currentTotalSize = 0;
