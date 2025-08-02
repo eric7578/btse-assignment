@@ -1,6 +1,9 @@
 import OrderBook from './OrderBook.jsx';
 import './main.css';
+import { enableMapSet } from 'immer';
 import { createRoot } from 'react-dom/client';
+
+enableMapSet();
 
 createRoot(document.getElementById('root')).render(
   <OrderBook

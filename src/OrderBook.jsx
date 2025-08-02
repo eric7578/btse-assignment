@@ -4,7 +4,7 @@ import useLastPrice from './useLastPrice';
 import useOrderBook from './useOrderBook';
 
 export default function OrderBook({ market, wsOrderBook, wsLastPrice, numQuotes }) {
-  const [sells, buys] = useOrderBook(market, numQuotes, wsOrderBook, wsLastPrice);
+  const [sells, sellsTotalSize, buys, buysTotalSize] = useOrderBook(market, numQuotes, wsOrderBook, wsLastPrice);
   const lastPrice = useLastPrice(market, wsLastPrice);
 
   return (
@@ -20,11 +20,11 @@ export default function OrderBook({ market, wsOrderBook, wsLastPrice, numQuotes 
         </thead>
         <tbody>
           {sells.map(sell => (
-            <Quote key={sell.price} isSell {...sell} />
+            <Quote key={sell.price} quote={sell} isSell={true} totalSize={sellsTotalSize} />
           ))}
           {Boolean(lastPrice) && <LastPrice lastPrice={lastPrice} />}
           {buys.map(buy => (
-            <Quote key={buy.price} {...buy} />
+            <Quote key={buy.price} quote={buy} isSell={false} totalSize={buysTotalSize} />
           ))}
         </tbody>
       </table>
