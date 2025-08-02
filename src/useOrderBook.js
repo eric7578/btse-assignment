@@ -8,10 +8,19 @@ export default function useOrderBook(market, numQuotes, wsOrderBook) {
   useEffect(() => {
     const ws = new WebSocket(wsOrderBook);
     const channel = `update:${market}`;
+    let seqNum = 0;
 
-    ws.onopen = () => {
+    const subscribe = () => {
+      console.log(`Subscribing to ${channel}`);
       ws.send(JSON.stringify({ op: 'subscribe', args: [channel] }));
     };
+
+    const unsubscribe = () => {
+      console.log(`Unsubscribing from ${channel}`);
+      ws.send(JSON.stringify({ op: 'unsubscribe', args: [channel] }));
+    };
+
+    ws.onopen = subscribe;
 
     ws.onmessage = e => {
       const recv = JSON.parse(e.data).data;
@@ -19,11 +28,19 @@ export default function useOrderBook(market, numQuotes, wsOrderBook) {
       if (recv?.type === 'snapshot') {
         sellsSnapshot(recv.asks);
         buysSnapshot(recv.bids);
+        seqNum = recv.seqNum;
       }
 
-      if (recv?.type === 'delta') {
-        sellsDelta(recv.asks);
-        buysDelta(recv.bids);
+      if (seqNum > 0 && recv?.type === 'delta') {
+        if (seqNum === recv.prevSeqNum) {
+          seqNum = recv.seqNum;
+          sellsDelta(recv.asks);
+          buysDelta(recv.bids);
+        } else {
+          seqNum = 0;
+          unsubscribe();
+          subscribe();
+        }
       }
     };
 
