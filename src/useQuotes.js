@@ -1,7 +1,12 @@
-import { useCallback, useMemo, useReducer, useRef } from 'react';
+import { produce } from 'immer';
+import { useCallback, useMemo, useReducer } from 'react';
 
-export default function useQuotes(descTotal, numQuotes) {
-  const [priceSizes, dispatch] = useReducer(quotesReducer, new Map());
+export default function useQuotes(numQuotes, isSell) {
+  const [state, dispatch] = useReducer(quotesReducer, {
+    // Map<price, { price, isNewPrice, size, sizeDelta }>
+    quotes: new Map(),
+    totalSize: 0,
+  });
 
   const snapshot = useCallback(
     quotes => {
@@ -23,62 +28,92 @@ export default function useQuotes(descTotal, numQuotes) {
     [dispatch],
   );
 
-  const currentPrices = useRef(new Set());
-  const quotes = useMemo(() => {
-    const sliced = Array.from(priceSizes.entries()).slice(0, numQuotes);
-    const totalSizes = sliced.reduce((sum, q) => sum + q[1], 0);
-    const quotes = sliced.map(([price, size]) => ({
-      price,
-      size,
-      isNew: currentPrices.current.size > 0 ? !currentPrices.current.has(price) : false,
-    }));
+  const slicedQuotes = useMemo(() => {
+    return sliceQuotes(state.quotes, numQuotes, isSell);
+  }, [state.quotes, isSell, numQuotes]);
 
-    // Calculate total for quotes
-    if (descTotal) {
-      const last = quotes.length - 1;
-      for (let i = last; i >= 0; i--) {
-        const q = quotes[i];
-        q.total = i === last ? q.size : quotes[i + 1].total + q.size;
-        q.totalPercent = q.total / totalSizes;
-      }
-    } else {
-      quotes.forEach((q, i) => {
-        q.total = i > 0 ? quotes[i - 1].total + q.size : q.size;
-        q.totalPercent = q.total / totalSizes;
-      });
-    }
-
-    // Update currentPrices to reflect the latest prices
-    currentPrices.current = new Set(priceSizes.keys());
-
-    return quotes;
-  }, [priceSizes, numQuotes, descTotal]);
-
-  return [quotes, snapshot, delta];
+  return [slicedQuotes, state.totalSize, snapshot, delta];
 }
 
-function quotesReducer(priceSizes, action) {
+function quotesReducer(state, action) {
   switch (action.type) {
+    // 快照,直接更新price-size
     case 'snapshot': {
-      const quoteKvPairs = action.quotes.map(([sPrice, sSize]) => [Number(sPrice), Number(sSize)]);
-      return new Map(quoteKvPairs);
+      return action.quotes.reduce(
+        (nextState, [sPrice, sSize]) => {
+          const price = Number(sPrice);
+          const size = Number(sSize);
+
+          nextState.totalSize += size;
+          nextState.quotes.set(price, {
+            price,
+            isNewPrice: false,
+            size,
+            sizeDelta: 0,
+          });
+
+          return nextState;
+        },
+        {
+          quotes: new Map(),
+          totalSize: 0,
+        },
+      );
     }
 
+    // 差異更新,更新price-size
     case 'delta': {
-      priceSizes = new Map(priceSizes);
-      action.quotes.forEach(([sPrice, sSize]) => {
-        const price = Number(sPrice);
-        const size = Number(sSize);
-        if (size === 0) {
-          priceSizes.delete(price);
-        } else {
-          priceSizes.set(price, size);
-        }
+      return produce(state, draft => {
+        draft.totalSize = 0;
+        action.quotes.forEach(([sPrice, sSize]) => {
+          const price = Number(sPrice);
+          const size = Number(sSize);
+
+          if (size === 0) {
+            // 若size為0,則刪除該quote
+            draft.quotes.delete(price);
+          } else if (draft.quotes.has(price)) {
+            // 更新已存在的quote
+            const existingQuote = draft.quotes.get(price);
+            existingQuote.sizeDelta = existingQuote.size - size;
+            existingQuote.size = size;
+            existingQuote.isNewPrice = false;
+            draft.totalSize += size;
+          } else {
+            // 若為新quote,則新增
+            draft.quotes.set(price, {
+              price,
+              isNewPrice: true,
+              size,
+              sizeDelta: 0,
+            });
+            draft.totalSize += size;
+          }
+        });
       });
-      return priceSizes;
     }
 
     default:
       throw new Error(`Unknown action type: ${action.type}`);
   }
+}
+
+function sliceQuotes(allQuotes, numQuotes, isSell) {
+  const quotes = [...allQuotes.values()].slice(0, numQuotes);
+  return produce(quotes, draft => {
+    let currentTotalSize = 0;
+    if (isSell) {
+      const len = Math.min(quotes.length, numQuotes);
+      for (let i = len - 1; i >= 0; i--) {
+        const q = draft[i];
+        currentTotalSize += q.size;
+        q.currentTotalSize = currentTotalSize;
+      }
+    } else {
+      draft.forEach(q => {
+        currentTotalSize += q.size;
+        q.currentTotalSize = currentTotalSize;
+      });
+    }
+  });
 }

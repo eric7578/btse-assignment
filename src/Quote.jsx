@@ -1,18 +1,16 @@
 import useBlink from './useBlink';
-import usePrevious from './usePrevious';
 import cx from 'clsx';
 import { memo } from 'react';
 
-const Quote = memo(({ price, size, total, isNew, totalPercent, isSell }) => {
-  const sizeBarWidth = totalPercent * 100;
+function Quote({ quote, totalSize, isSell }) {
+  const sizeBarWidth = (quote.currentTotalSize / totalSize) * 100;
 
   // 若價錢改變 且size異動 才需要閃爍
-  const prevSize = usePrevious(size);
-  const blinkGreenOnSize = useBlink(!isNew && size > prevSize);
-  const blinkRedOnSize = useBlink(!isNew && size < prevSize);
+  const blinkGreenOnSize = useBlink(quote.sizeDelta > 0);
+  const blinkRedOnSize = useBlink(quote.sizeDelta < 0);
 
   // 若是新報價 則閃爍
-  const blinkRow = useBlink(isNew);
+  const blinkRow = useBlink(quote.isNewPrice);
 
   return (
     <tr
@@ -22,7 +20,7 @@ const Quote = memo(({ price, size, total, isNew, totalPercent, isSell }) => {
       }}
     >
       <td className={cx('py-1 px-2', isSell ? 'text-(--sell-price-color)' : 'text-(--buy-price-color)')}>
-        {price.toLocaleString('en-US')}
+        {quote.price.toLocaleString('en-US')}
       </td>
       <td
         className='py-1 px-2 text-right'
@@ -30,7 +28,7 @@ const Quote = memo(({ price, size, total, isNew, totalPercent, isSell }) => {
           animation: blinkGreenOnSize ? 'blink-green 500ms ease' : blinkRedOnSize ? 'blink-red 500ms ease' : 'none',
         }}
       >
-        {size.toLocaleString('en-US')}
+        {quote.size.toLocaleString('en-US')}
       </td>
       <td
         className='py-1 px-2 text-right bg-right bg-no-repeat'
@@ -43,10 +41,10 @@ const Quote = memo(({ price, size, total, isNew, totalPercent, isSell }) => {
           )`,
         }}
       >
-        {total.toLocaleString('en-US')}
+        {quote.currentTotalSize.toLocaleString('en-US')}
       </td>
     </tr>
   );
-});
+}
 
-export default Quote;
+export default memo(Quote);

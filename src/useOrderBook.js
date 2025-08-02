@@ -2,8 +2,8 @@ import useQuotes from './useQuotes';
 import { useEffect } from 'react';
 
 export default function useOrderBook(market, numQuotes, wsOrderBook) {
-  const [sells, sellsSnapshot, sellsDelta] = useQuotes(true, numQuotes);
-  const [buys, buysSnapshot, buysDelta] = useQuotes(false, numQuotes);
+  const [sells, sellsTotalSize, sellsSnapshot, sellsDelta] = useQuotes(numQuotes, true);
+  const [buys, buysTotalSize, buysSnapshot, buysDelta] = useQuotes(numQuotes, false);
 
   useEffect(() => {
     const ws = new WebSocket(wsOrderBook);
@@ -26,16 +26,16 @@ export default function useOrderBook(market, numQuotes, wsOrderBook) {
       const recv = JSON.parse(e.data).data;
 
       if (recv?.type === 'snapshot') {
-        sellsSnapshot(recv.asks);
-        buysSnapshot(recv.bids);
+        sellsSnapshot(recv.asks, true);
+        buysSnapshot(recv.bids, false);
         seqNum = recv.seqNum;
       }
 
       if (seqNum > 0 && recv?.type === 'delta') {
         if (seqNum === recv.prevSeqNum) {
           seqNum = recv.seqNum;
-          sellsDelta(recv.asks);
-          buysDelta(recv.bids);
+          sellsDelta(recv.asks, true);
+          buysDelta(recv.bids, false);
         } else {
           seqNum = 0;
           unsubscribe();
@@ -50,5 +50,5 @@ export default function useOrderBook(market, numQuotes, wsOrderBook) {
     };
   }, [wsOrderBook, market, sellsSnapshot, sellsDelta, buysSnapshot, buysDelta]);
 
-  return [sells, buys];
+  return [sells, sellsTotalSize, buys, buysTotalSize];
 }
