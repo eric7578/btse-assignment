@@ -98,6 +98,7 @@ export function quotesReducer(state, action) {
   }
 }
 
+// Show max 8 quotes, and calculate currentTotalSize
 export function sliceQuotes(allQuotes, numQuotes, isSell) {
   const quotes = [...allQuotes.values()].slice(0, numQuotes);
   return produce(quotes, draft => {

@@ -1,12 +1,8 @@
 import useNumberFormat from './useFormatCurrency';
-import usePrevious from './usePrevious';
 import cx from 'clsx';
 import { memo } from 'react';
 
 function LastPrice({ lastPrice }) {
-  const prevPrice = usePrevious(lastPrice.price);
-  const isPriceIncreased = lastPrice.price > prevPrice;
-  const isPriceDecreased = lastPrice.price < prevPrice;
   const lastPriceText = useNumberFormat(lastPrice.price, 1);
 
   return (
@@ -14,9 +10,9 @@ function LastPrice({ lastPrice }) {
       <td
         colSpan={3}
         className={cx('text-center text-lg font-bold transition-colors py-1', {
-          'text-(--buy-price-color) bg-(--buy-bar-color)': isPriceIncreased,
-          'text-(--sell-price-color) bg-(--sell-bar-color)': isPriceDecreased,
-          'text-(--text-color) bg-(--last-price-same-bg)': !isPriceIncreased && !isPriceDecreased,
+          'text-(--buy-price-color) bg-(--buy-bar-color)': lastPrice.priceDelta > 0,
+          'text-(--sell-price-color) bg-(--sell-bar-color)': lastPrice.priceDelta < 0,
+          'text-(--text-color) bg-(--last-price-same-bg)': lastPrice.priceDelta === 0,
         })}
       >
         {lastPriceText}
@@ -33,9 +29,9 @@ function LastPrice({ lastPrice }) {
           strokeLinecap='round'
           strokeLinejoin='round'
           className={cx('ml-1 w-4 h-4', {
-            'inline-block rotate-180': isPriceIncreased,
-            'inline-block': isPriceDecreased,
-            hidden: !isPriceIncreased && !isPriceDecreased,
+            'inline-block rotate-180': lastPrice.priceDelta > 0,
+            'inline-block': lastPrice.priceDelta < 0,
+            hidden: lastPrice.priceDelta === 0,
           })}
         >
           <line x1='12' y1='5' x2='12' y2='19'></line>

@@ -13,7 +13,13 @@ export default function useLastPrice(market, wsLastPrice) {
 
     ws.onmessage = e => {
       const recv = JSON.parse(e.data).data;
-      setLastPrice(recv?.[0]);
+      const lastPrice = recv?.[0];
+      if (lastPrice) {
+        setLastPrice(prevLastPrice => ({
+          price: lastPrice.price,
+          priceDelta: prevLastPrice === undefined ? 0 : lastPrice.price - prevLastPrice.price,
+        }));
+      }
     };
 
     return () => {
