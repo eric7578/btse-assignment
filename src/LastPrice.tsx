@@ -1,8 +1,13 @@
 import useNumberFormat from './useFormatCurrency';
+import type { LastPriceObject } from './useLastPrice';
 import cx from 'clsx';
 import { memo } from 'react';
 
-function LastPrice({ lastPrice }) {
+type LastPriceProps = {
+  lastPrice: LastPriceObject;
+};
+
+function LastPrice({ lastPrice }: LastPriceProps) {
   const lastPriceText = useNumberFormat(lastPrice.price, 1);
 
   return (

@@ -3,8 +3,15 @@ import Quote from './Quote';
 import useLastPrice from './useLastPrice';
 import useOrderBook from './useOrderBook';
 
-export default function OrderBook({ market, wsOrderBook, wsLastPrice, numQuotes }) {
-  const [sells, sellsTotalSize, buys, buysTotalSize] = useOrderBook(market, numQuotes, wsOrderBook, wsLastPrice);
+type OrderBookProps = {
+  market: string;
+  wsOrderBook: string;
+  wsLastPrice: string;
+  numQuotes: number;
+};
+
+export default function OrderBook({ market, wsOrderBook, wsLastPrice, numQuotes }: OrderBookProps) {
+  const [sells, sellsTotalSize, buys, buysTotalSize] = useOrderBook(market, numQuotes, wsOrderBook);
   const lastPrice = useLastPrice(market, wsLastPrice);
   const isLoaded = sells.length > 0 && buys.length > 0 && lastPrice;
 

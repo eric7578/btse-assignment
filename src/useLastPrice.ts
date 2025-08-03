@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 
-export default function useLastPrice(market, wsLastPrice) {
-  const [lastPrice, setLastPrice] = useState();
+export type LastPriceObject = {
+  price: number;
+  priceDelta: number;
+};
+
+export default function useLastPrice(market: string, wsLastPrice: string) {
+  const [lastPrice, setLastPrice] = useState<LastPriceObject | undefined>();
 
   useEffect(() => {
     const ws = new WebSocket(wsLastPrice);

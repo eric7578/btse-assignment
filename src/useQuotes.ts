@@ -1,15 +1,31 @@
 import { produce } from 'immer';
 import { useCallback, useMemo, useReducer } from 'react';
 
-export default function useQuotes(numQuotes, isSell) {
-  const [state, dispatch] = useReducer(quotesReducer, {
-    // Map<price, { price, isNewPrice, size, sizeDelta }>
-    quotes: new Map(),
-    totalSize: 0,
-  });
+type RawQuote = [string, string]; // [price, size]
+
+export type QuoteObject = {
+  price: number;
+  isNewPrice: boolean;
+  size: number;
+  sizeDelta: number;
+  currentTotalSize: number;
+};
+
+type QuotesAction = { type: 'snapshot'; quotes: RawQuote[] } | { type: 'delta'; quotes: RawQuote[] };
+
+const initialState = {
+  quotes: new Map<number, QuoteObject>(),
+  totalSize: 0,
+};
+
+type SnapshotFn = (quotes: RawQuote[]) => void;
+type DeltaFn = (quotes: RawQuote[]) => void;
+
+export default function useQuotes(numQuotes: number, isSell: boolean): [QuoteObject[], number, SnapshotFn, DeltaFn] {
+  const [state, dispatch] = useReducer(quotesReducer, initialState);
 
   const snapshot = useCallback(
-    quotes => {
+    (quotes: RawQuote[]) => {
       dispatch({
         type: 'snapshot',
         quotes,
@@ -19,7 +35,7 @@ export default function useQuotes(numQuotes, isSell) {
   );
 
   const delta = useCallback(
-    quotes => {
+    (quotes: RawQuote[]) => {
       dispatch({
         type: 'delta',
         quotes,
@@ -35,7 +51,7 @@ export default function useQuotes(numQuotes, isSell) {
   return [slicedQuotes, state.totalSize, snapshot, delta];
 }
 
-export function quotesReducer(state, action) {
+export function quotesReducer(state: typeof initialState, action: QuotesAction) {
   switch (action.type) {
     // Snapshot: directly update price-size
     case 'snapshot': {
@@ -68,13 +84,13 @@ export function quotesReducer(state, action) {
         action.quotes.forEach(([sPrice, sSize]) => {
           const price = Number(sPrice);
           const size = Number(sSize);
+          const existingQuote = draft.quotes.get(price);
 
           if (size === 0) {
             // If size is 0, delete the quote
             draft.quotes.delete(price);
-          } else if (draft.quotes.has(price)) {
+          } else if (existingQuote) {
             // Update existing quote
-            const existingQuote = draft.quotes.get(price);
             existingQuote.sizeDelta = existingQuote.size - size;
             existingQuote.size = size;
             existingQuote.isNewPrice = false;
@@ -86,6 +102,7 @@ export function quotesReducer(state, action) {
               isNewPrice: true,
               size,
               sizeDelta: 0,
+              currentTotalSize: 0, // This will be calculated later in sliceQuotes
             });
             draft.totalSize += size;
           }
@@ -93,13 +110,15 @@ export function quotesReducer(state, action) {
       });
     }
 
-    default:
-      throw new Error(`Unknown action type: ${action.type}`);
+    default: {
+      console.log(`Unknown action type: ${action}`);
+      return state;
+    }
   }
 }
 
 // Show max 8 quotes, and calculate currentTotalSize
-export function sliceQuotes(allQuotes, numQuotes, isSell) {
+export function sliceQuotes(allQuotes: Map<number, QuoteObject>, numQuotes: number, isSell: boolean) {
   const quotes = [...allQuotes.values()].slice(0, numQuotes);
   return produce(quotes, draft => {
     let currentTotalSize = 0;

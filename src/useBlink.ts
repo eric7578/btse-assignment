@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function useBlink(shouldBlink, duration = 500) {
+export default function useBlink(shouldBlink: boolean, duration = 500) {
   const [isBlinking, setIsBlinking] = useState(shouldBlink);
 
   useEffect(() => {

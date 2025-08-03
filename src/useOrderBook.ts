@@ -1,7 +1,11 @@
-import useQuotes from './useQuotes';
+import useQuotes, { type QuoteObject } from './useQuotes';
 import { useEffect } from 'react';
 
-export default function useOrderBook(market, numQuotes, wsOrderBook) {
+export default function useOrderBook(
+  market: string,
+  numQuotes: number,
+  wsOrderBook: string,
+): [QuoteObject[], number, QuoteObject[], number] {
   const [sells, sellsTotalSize, sellsSnapshot, sellsDelta] = useQuotes(numQuotes, true);
   const [buys, buysTotalSize, buysSnapshot, buysDelta] = useQuotes(numQuotes, false);
 
@@ -26,16 +30,16 @@ export default function useOrderBook(market, numQuotes, wsOrderBook) {
       const recv = JSON.parse(e.data).data;
 
       if (recv?.type === 'snapshot') {
-        sellsSnapshot(recv.asks, true);
-        buysSnapshot(recv.bids, false);
+        sellsSnapshot(recv.asks);
+        buysSnapshot(recv.bids);
         seqNum = recv.seqNum;
       }
 
       if (seqNum > 0 && recv?.type === 'delta') {
         if (seqNum === recv.prevSeqNum) {
           seqNum = recv.seqNum;
-          sellsDelta(recv.asks, true);
-          buysDelta(recv.bids, false);
+          sellsDelta(recv.asks);
+          buysDelta(recv.bids);
         } else {
           seqNum = 0;
           unsubscribe();

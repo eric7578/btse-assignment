@@ -1,9 +1,16 @@
 import useBlink from './useBlink';
 import useNumberFormat from './useFormatCurrency';
+import type { QuoteObject } from './useQuotes';
 import cx from 'clsx';
 import { memo } from 'react';
 
-function Quote({ quote, totalSize, isSell }) {
+type QuoteProps = {
+  quote: QuoteObject;
+  totalSize: number;
+  isSell: boolean;
+};
+
+function Quote({ quote, totalSize, isSell }: QuoteProps) {
   const sizeBarWidth = (quote.currentTotalSize / totalSize) * 100;
 
   // Blink when price changes and size changes
