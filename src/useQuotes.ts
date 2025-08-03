@@ -51,30 +51,25 @@ export default function useQuotes(numQuotes: number, isSell: boolean): [QuoteObj
   return [slicedQuotes, state.totalSize, snapshot, delta];
 }
 
-export function quotesReducer(state: typeof initialState, action: QuotesAction) {
+export function quotesReducer(state: typeof initialState, action: QuotesAction): typeof initialState {
   switch (action.type) {
     // Snapshot: directly update price-size
     case 'snapshot': {
-      return action.quotes.reduce(
-        (nextState, [sPrice, sSize]) => {
-          const price = Number(sPrice);
-          const size = Number(sSize);
+      return action.quotes.reduce((nextState, [sPrice, sSize]) => {
+        const price = Number(sPrice);
+        const size = Number(sSize);
 
-          nextState.totalSize += size;
-          nextState.quotes.set(price, {
-            price,
-            isNewPrice: false,
-            size,
-            sizeDelta: 0,
-          });
+        nextState.totalSize += size;
+        nextState.quotes.set(price, {
+          price,
+          isNewPrice: false,
+          size,
+          sizeDelta: 0,
+          currentTotalSize: 0,
+        });
 
-          return nextState;
-        },
-        {
-          quotes: new Map(),
-          totalSize: 0,
-        },
-      );
+        return nextState;
+      }, initialState);
     }
 
     // Delta update: update price-size
