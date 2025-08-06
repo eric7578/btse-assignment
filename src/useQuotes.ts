@@ -52,24 +52,31 @@ export default function useQuotes(numQuotes: number, isSell: boolean): [QuoteObj
 }
 
 export function quotesReducer(state: typeof initialState, action: QuotesAction): typeof initialState {
+  console.log(action);
   switch (action.type) {
     // Snapshot: directly update price-size
     case 'snapshot': {
-      return action.quotes.reduce((nextState, [sPrice, sSize]) => {
-        const price = Number(sPrice);
-        const size = Number(sSize);
+      return action.quotes.reduce(
+        (nextState, [sPrice, sSize]) => {
+          const price = Number(sPrice);
+          const size = Number(sSize);
 
-        nextState.totalSize += size;
-        nextState.quotes.set(price, {
-          price,
-          isNewPrice: false,
-          size,
-          sizeDelta: 0,
-          currentTotalSize: 0,
-        });
+          nextState.totalSize += size;
+          nextState.quotes.set(price, {
+            price,
+            isNewPrice: false,
+            size,
+            sizeDelta: 0,
+            currentTotalSize: 0,
+          });
 
-        return nextState;
-      }, initialState);
+          return nextState;
+        },
+        {
+          quotes: new Map(state.quotes),
+          totalSize: state.totalSize,
+        } as typeof initialState,
+      );
     }
 
     // Delta update: update price-size
@@ -80,7 +87,6 @@ export function quotesReducer(state: typeof initialState, action: QuotesAction):
           const price = Number(sPrice);
           const size = Number(sSize);
           const existingQuote = draft.quotes.get(price);
-
           if (size === 0) {
             // If size is 0, delete the quote
             draft.quotes.delete(price);
@@ -102,6 +108,9 @@ export function quotesReducer(state: typeof initialState, action: QuotesAction):
             draft.totalSize += size;
           }
         });
+        const quotesArray = Array.from(draft.quotes.entries());
+        quotesArray.sort((a, b) => b[0] - a[0]);
+        draft.quotes = new Map(quotesArray);
       });
     }
 
